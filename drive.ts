@@ -10,6 +10,7 @@ type Options = {
     root_id?: string,
     access_token?: string,
     expires_on?: number,
+    logger?: boolean
 }
 
 /**
@@ -67,7 +68,10 @@ export class GoogleDrive {
         // The access_token expires 5 minutes earlier than the official api
         this.#options.expires_on = Date.now() + (result.expires_in - 300) * 1000;
         this.#options.access_token = result.access_token;
-        console.log("Google drive authorized:", Date.now() - time, "ms");
+
+        if (this.#options.logger) {
+            console.log("Google drive authorized:", Date.now() - time, "ms");
+        }
     }
 
     /**
@@ -81,10 +85,11 @@ export class GoogleDrive {
             throw { status: 404, message: "Path not found" };
         }
 
-        if (metadata.mimeType === FOLDER_TYPE) {
+        metadata.isFolder = metadata.mimeType === FOLDER_TYPE;
+        if (metadata.isFolder) {
             metadata.list = await this.listFiles(metadata.id);
         } else {
-            metadata.rawData = await this.getRawData(metadata.id, range);
+            metadata.raw = await this.getRawData(metadata.id, range);
         }
         return metadata;
     }
@@ -106,12 +111,18 @@ export class GoogleDrive {
                 fullPath += name + "/";
 
                 if (!this.#pathCache[fullPath]) {
+                    const time = Date.now();
+
                     name = decodeURIComponent(name).replace(/\'/g, "\\'");
                     const result: any = await this.#request({
                         q: `"${metadata.id}" in parents and name = "${name}" and trashed = false`,
                         fields: `files(${FILE_ATTRS})`,
                     });
+
                     this.#pathCache[fullPath] = result.files[0];
+                    if (this.#options.logger) {
+                        console.log(`Metadata of "${fullPath}" requested:`, Date.now() - time, "ms");
+                    }
                 }
                 metadata = this.#pathCache[fullPath];
                 if (!metadata) break;
@@ -127,7 +138,9 @@ export class GoogleDrive {
      * @returns
      */
     async getRawData(id: string, range = "") {
+        const time = Date.now();
         await this.authorize();
+
         const response = await fetch(DRIVE_URL + "/" + id + "?alt=media", {
             headers: {
                 Authorization: "Bearer " + this.#options.access_token,
@@ -138,6 +151,9 @@ export class GoogleDrive {
         if (response.status >= 400) {
             const result = await response.json();
             throw { status: response.status, message: result.error.message };
+        }
+        if (this.#options.logger) {
+            console.log(`Rawdata of "${id}" requested:`, Date.now() - time, "ms");
         }
         return response.body;
     }
@@ -151,8 +167,7 @@ export class GoogleDrive {
         let pageToken;
         const list = [];
         const params = {
-            pageToken: 0,
-            pageSize: 1000,
+            pageToken: 0, pageSize: 1000,
             q: `"${id}" in parents and trashed = false AND name != ".password"`,
             fields: `nextPageToken, files(${FILE_ATTRS})`,
             orderBy: "folder, name"
@@ -160,7 +175,13 @@ export class GoogleDrive {
 
         do {
             if (pageToken) params.pageToken = pageToken;
+
+            const time = Date.now();
             const result: any = await this.#request(params);
+            if (this.#options.logger) {
+                console.log(`Filelist of "${id}" requested:`, Date.now() - time, "ms");
+            }
+
             pageToken = result.nextPageToken;
             list.push(...result.files);
         } while (
@@ -175,7 +196,6 @@ export class GoogleDrive {
      * @returns
      */
     async #request(params: Record<string, string | number | boolean>): Promise<unknown> {
-        const time = Date.now();
         await this.authorize();
 
         const response = await fetch(DRIVE_URL + "?" + this.#stringify(params), {
@@ -190,8 +210,6 @@ export class GoogleDrive {
             }
             throw { status: response.status, message: result.error.message };
         }
-
-        console.log("Google drive requested:", Date.now() - time, "ms");
         return result;
     }
 
