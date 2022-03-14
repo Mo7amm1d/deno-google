@@ -81,11 +81,12 @@ export class GoogleDrive {
    * 2. If it's a file, return metadata and raw data
    */
   async index(path?: string, range = "") {
-    const metadata = await this.getMetadata(path);
+    let metadata = await this.getMetadata(path);
     if (!metadata) {
       throw { status: 404, message: "Path not found" };
     }
 
+    metadata = { ...metadata };
     metadata.isFolder = metadata.mimeType === FOLDER_TYPE;
     if (metadata.isFolder) {
       metadata.list = await this.listFiles(metadata.id);
