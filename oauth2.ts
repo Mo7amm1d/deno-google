@@ -137,6 +137,7 @@ export class GoogleOAuth2 {
       const cert = await response.json();
       return verify(token, cert[kid]);
     } catch (e) {
+      console.log(e);
       return false;
     }
   }

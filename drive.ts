@@ -1,3 +1,4 @@
+// deno-lint-ignore-file no-explicit-any
 const TOKEN_URL = "https://www.googleapis.com/oauth2/v4/token";
 const DRIVE_URL = "https://www.googleapis.com/drive/v3/files";
 const FILE_ATTRS = "id, name, mimeType, size, modifiedTime, description, iconLink, thumbnailLink, imageMediaMetadata";
