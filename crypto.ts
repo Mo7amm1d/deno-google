@@ -1,5 +1,5 @@
 import { encode as encodeBase64Url, decode as decodeBase64Url }
-    from "https://deno.land/std@0.128.0/encoding/base64url.ts";
+    from "https://deno.land/std@0.129.0/encoding/base64url.ts";
 
 const textEncode = (s: string) => new TextEncoder().encode(s);
 const textDecode = (u: Uint8Array) => new TextDecoder().decode(u);
