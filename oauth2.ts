@@ -138,7 +138,6 @@ export class GoogleOAuth2 {
       return verify(token, cert[kid]);
     } catch (e) {
       console.log(e);
-      return false;
     }
   }
 
