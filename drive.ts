@@ -77,11 +77,11 @@ export class GoogleDrive {
 
   /**
    * Get the corresponding data according to the path
-   * 1. If it's a directory, return metadata and a list of files
-   * 2. If it's a file, return metadata and raw data
+   * 1. If it's a directory, return metadata and list() method
+   * 2. If it's a file, return metadata and raw() method
    */
-  async index(path?: string, range = "") {
-    let metadata = await this.getMetadata(path);
+  async index(path?: string) {
+    let metadata = await this.#getMetadata(path);
     if (!metadata) {
       throw { status: 404, message: "Path not found" };
     }
@@ -89,9 +89,17 @@ export class GoogleDrive {
     metadata = { ...metadata };
     metadata.isFolder = metadata.mimeType === FOLDER_TYPE;
     if (metadata.isFolder) {
-      metadata.list = await this.listFiles(metadata.id);
+      // add list() method to metadata
+      metadata.list = async () => {
+        const files = await this.#listFiles(metadata.id);
+        files.map((item: any) => item.isFolder = item.mimeType === FOLDER_TYPE);
+        return files;
+      }
     } else {
-      metadata.raw = await this.getRawData(metadata.id, range);
+      // add raw() method to metadata
+      metadata.raw = async (range = "") => {
+        return await this.#getRawData(metadata.id, range);
+      }
     }
     return metadata;
   }
@@ -101,7 +109,7 @@ export class GoogleDrive {
    * @param path
    * @returns
    */
-  async getMetadata(path = "") {
+  async #getMetadata(path = "") {
     path = this.#join("/", path, "/");
 
     if (!this.#pathCache[path]) {
@@ -139,7 +147,7 @@ export class GoogleDrive {
    * @param range
    * @returns
    */
-  async getRawData(id: string, range = "") {
+  async #getRawData(id: string, range = "") {
     const time = Date.now();
     await this.authorize();
 
@@ -165,7 +173,7 @@ export class GoogleDrive {
    * @param id
    * @returns
    */
-  async listFiles(id: string) {
+  async #listFiles(id: string) {
     let pageToken;
     const list = [];
     const params = {
