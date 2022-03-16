@@ -135,7 +135,7 @@ export class GoogleOAuth2 {
       const kid = decoded.header.kid;
       const response = await fetch(CERTS_URL);
       const cert = await response.json();
-      return verify(token, cert[kid]);
+      return await verify(token, cert[kid]);
     } catch (e) {
       console.log(e);
     }
