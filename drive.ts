@@ -125,7 +125,7 @@ export class GoogleDrive {
 
           name = decodeURIComponent(name).replace(/\'/g, "\\'");
           const result: any = await this.#request({
-            q: `"${metadata.id}" in parents and name = "${name}" and trashed = false`,
+            q: `'${metadata.id}' in parents and name = '${name}' and trashed = false`,
             fields: `files(${FILE_ATTRS})`,
           });
 
@@ -178,7 +178,7 @@ export class GoogleDrive {
     const list = [];
     const params = {
       pageToken: 0, pageSize: 1000,
-      q: `"${id}" in parents and trashed = false AND name != ".password"`,
+      q: `'${id}' in parents and trashed = false AND name != '.password'`,
       fields: `nextPageToken, files(${FILE_ATTRS})`,
       orderBy: "folder, name"
     };
