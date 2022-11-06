@@ -1,5 +1,6 @@
 import { decode as base64UrlDecode } from "https://deno.land/std@0.129.0/encoding/base64url.ts";
 import { verify } from "https://deno.land/x/djwt@v2.4/mod.ts";
+import { importX509 }  from 'https://deno.land/x/jose@v4.10.4/index.ts'
 
 const OAUTH_URL = 'https://accounts.google.com/o/oauth2';
 const TOKEN_URL = 'https://www.googleapis.com/oauth2/v4/token';
@@ -135,7 +136,8 @@ export class GoogleOAuth2 {
       const kid = decoded.header.kid;
       const response = await fetch(CERTS_URL);
       const cert = await response.json();
-      return await verify(token, cert[kid]);
+      const certKey = await importX509(cert[kid], 'RS256')  as CryptoKey;
+      return await verify(token, certKey);
     } catch (e) {
       console.log(e);
     }
