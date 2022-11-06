@@ -89,9 +89,6 @@ It is usually not necessary to verify the signature for the first authorization,
 but it is strongly recommended to verify when you use the id_token as a cookie
 to keep the login state.
 
-**NOTE: There is a bug in this method, which is caused by the type of
-"cryptoKey", and I don't know how to solve it for the time being.**
-
 ```ts
 const data = await ga.verifyIdToken(id_token);
 ```
