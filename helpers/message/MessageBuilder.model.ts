@@ -19,12 +19,13 @@ Content-Type: application/json
 
 class FileType {
     static PDF = "application/pdf";
-    static JPG = "image/jpeg";
+    // static JPG = "image/jpeg";
 }
 
 class MessageBuilder {
 
     // Using raw to simplify the library
+    private _senderDisplayName = "";
     private _senderEmail = "";
     private _recievers: string[] = [];
     private _recieversCcs: string[] = [];
@@ -40,8 +41,13 @@ class MessageBuilder {
     hasAttachment(): boolean {
         return this._file != null;
     }
+    
+    setSenderName(name: string){
+        this._senderDisplayName = name;
+        return this;
+    }
 
-    setSender(email: string){
+    setSenderEmail(email: string){
         this._senderEmail = email;
         return this;
     }
@@ -84,7 +90,7 @@ class MessageBuilder {
 
         if(this._file != null){
             return `Subject: ${this._subject}
-From: ${this._senderEmail}
+From: ${this._senderDisplayName != null ? `${this._senderDisplayName}<${this._senderEmail}>` : `${this._senderEmail}`} 
 To: ${this._recievers.join(',')}
 Bcc: ${this._recieversBccs.join(',')}
 Cc: ${this._recieversCcs.join(',')}
@@ -106,7 +112,7 @@ ${encodeBase64(this._file!)}
 
         
         return `Subject: ${this._subject}
-From: ${this._senderEmail}
+From: ${this._senderDisplayName != null ? `${this._senderDisplayName}<${this._senderEmail}>` : `${this._senderEmail}`} 
 To: ${this._recievers.join(',')}
 Bcc: ${this._recieversBccs.join(',')}
 Cc: ${this._recieversCcs.join(',')}
