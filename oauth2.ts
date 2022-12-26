@@ -136,7 +136,7 @@ export class GoogleOAuth2 {
       const kid = decoded.header.kid;
       const response = await fetch(CERTS_URL);
       const cert = await response.json();
-      const certKey = await importX509(cert[kid], 'RS256')  as CryptoKey;
+      const certKey = await importX509(cert[kid], 'RS256') as CryptoKey;
       return await verify(token, certKey);
     } catch (e) {
       console.log(e);
